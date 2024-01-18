@@ -29,48 +29,8 @@ public class EjemploJDBC {
 		try {
 			con = DriverManager.getConnection(URL, USER, PASS);
 			
-			System.out.println("Operaciones disponibles:");
-			System.out.println("1. Ver el listado");
-			System.out.println("2. Obtener por id");
-			System.out.println("3. Inserta un cliente nuevo");
-			System.out.println("4. Modificar un cliente existente");
-			System.out.println("5. Eliminar un cliente");
-			System.out.println("6. Cerrar programa");
+			selector();
 			
-			int seleccion = sc.nextInt();			
-			
-			
-			switch (seleccion) {
-			case 1: 
-				listado();
-				break;
-			case 2:
-				obtencionPorId();
-				break;
-			case 3:
-				insercion();
-				break;
-			case 4:
-				System.out.println("Sin implementar");
-				break;
-			case 5:
-				eliminacion();
-				break;
-			case 6:
-				break;
-			default:
-				throw new IllegalArgumentException("Unexpected value: " + seleccion);
-			}
-			
-			
-			
-//			insertar("8888888o", 0, "Nuevo nombre", "Nuevo apellido", LocalDate.of(1996, 07, 19));
-//			
-//			modificar(2, "99999999p", 0, "Modificado", "Modificado", LocalDate.of(2000, 12, 3));
-//			
-//			obtenerPorId(3);
-//			
-//			eliminar(2);
 			
 		} catch (SQLException e) {
 			System.err.println("Error al conectarse con la base de datos");
@@ -88,6 +48,48 @@ public class EjemploJDBC {
 			}
 		}
 		
+	}
+
+
+	private static void selector() {
+		System.out.println("Operaciones disponibles:");
+		System.out.println("1. Ver el listado");
+		System.out.println("2. Obtener por id");
+		System.out.println("3. Inserta un cliente nuevo");
+		System.out.println("4. Modificar un cliente existente");
+		System.out.println("5. Eliminar un cliente");
+		System.out.println("6. Cerrar programa");
+		
+		int seleccion = sc.nextInt();			
+		
+		
+		switch (seleccion) {
+		case 1: 
+			listado();
+			selector();
+			break;
+		case 2:
+			obtencionPorId();
+			selector();
+			break;
+		case 3:
+			insercion();
+			selector();
+			break;
+		case 4:
+			System.out.println("Sin implementar");
+			selector();
+			break;
+		case 5:
+			eliminacion();
+			selector();
+			break;
+		case 6:
+			System.err.println("Programa finalizado");
+			break;	
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + seleccion);
+		}
 	}
 
 
