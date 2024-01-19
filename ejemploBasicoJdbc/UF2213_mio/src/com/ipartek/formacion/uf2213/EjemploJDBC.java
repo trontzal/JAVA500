@@ -66,7 +66,7 @@ public class EjemploJDBC {
 	}
 
 	private static int pedirOpcion() {
-		return Consola.LeerInt("Introduce la opcion elegida");
+		return Consola.leerInt("Introduce la opcion elegida");
 	}
 
 	private static void ejecutar(int opcion) {
@@ -118,7 +118,7 @@ public class EjemploJDBC {
 	}
 
 	private static void buscar() {
-		long id = Consola.LeerLong("Introduce el id a buscar");
+		long id = Consola.leerLong("Introduce el id a buscar");
 		obtenerPorId(id);
 
 	}
@@ -131,11 +131,11 @@ public class EjemploJDBC {
 		String apellidos;
 		LocalDate fechaNacimiento;
 
-		dni = Consola.LeerString("DNI");
-		dniDiferenccial = Consola.LeerInt("DNI Diferencial");
-		nombre = Consola.LeerString("Nombre");
-		apellidos = Consola.LeerString("Apellidos");
-		fechaNacimiento = Consola.LeerFecha("Fecha de nacimiento");
+		dni = Consola.leerString("DNI");
+		dniDiferenccial = Consola.leerInt("DNI Diferencial");
+		nombre = Consola.leerString("Nombre");
+		apellidos = Consola.leerString("Apellidos");
+		fechaNacimiento = Consola.leerFecha("Fecha de nacimiento");
 
 		insertar(dni, dniDiferenccial, nombre, apellidos, fechaNacimiento);
 
@@ -149,19 +149,19 @@ public class EjemploJDBC {
 		String apellidos;
 		LocalDate fechaNacimiento;
 		
-		id = Consola.LeerLong("ID");
-		dni = Consola.LeerString("DNI");
-		dniDiferenccial = Consola.LeerInt("DNI Diferencial");
-		nombre = Consola.LeerString("Nombre");
-		apellidos = Consola.LeerString("Apellidos");
-		fechaNacimiento = Consola.LeerFecha("Fecha de nacimiento");
+		id = Consola.leerLong("ID");
+		dni = Consola.leerString("DNI");
+		dniDiferenccial = Consola.leerInt("DNI Diferencial");
+		nombre = Consola.leerString("Nombre");
+		apellidos = Consola.leerString("Apellidos");
+		fechaNacimiento = Consola.leerFecha("Fecha de nacimiento");
 
 		modificar(id ,dni, dniDiferenccial, nombre, apellidos, fechaNacimiento);
 	}
 
 	private static void borrar() {
 		Long id;
-		id = Consola.LeerLong("Id a eliminar");
+		id = Consola.leerLong("ID a eliminar");
 		borrar(id);
 	}
 
