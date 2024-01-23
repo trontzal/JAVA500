@@ -25,7 +25,11 @@ public class EjemploJDBC {
 	private static final int insertar = 3;
 	private static final int modifica = 4;
 	private static final int borrar = 5;
+	private static final int facturas = 6;
 	private static final int salir = 0;
+	
+	 
+	private static final String SQL_SELECT_ID_FACTURAS = null;
 
 	private static Connection con;
 
@@ -59,6 +63,7 @@ public class EjemploJDBC {
 				3. Insertar
 				4. Modificar
 				5. Eliminar
+				6. Facturas
 
 				0. SALIR
 				""");
@@ -91,6 +96,10 @@ public class EjemploJDBC {
 		}
 		case borrar: {
 			borrar();
+			break;
+		}
+		case facturas: {
+			facturas();
 			break;
 		}
 		case salir: {
@@ -148,7 +157,7 @@ public class EjemploJDBC {
 		String nombre;
 		String apellidos;
 		LocalDate fechaNacimiento;
-		
+
 		id = Consola.leerLong("ID");
 		dni = Consola.leerString("DNI");
 		dniDiferenccial = Consola.leerInt("DNI Diferencial");
@@ -156,13 +165,19 @@ public class EjemploJDBC {
 		apellidos = Consola.leerString("Apellidos");
 		fechaNacimiento = Consola.leerFecha("Fecha de nacimiento");
 
-		modificar(id ,dni, dniDiferenccial, nombre, apellidos, fechaNacimiento);
+		modificar(id, dni, dniDiferenccial, nombre, apellidos, fechaNacimiento);
 	}
 
 	private static void borrar() {
 		Long id;
 		id = Consola.leerLong("ID a eliminar");
 		borrar(id);
+	}
+
+	private static void facturas() {
+		long id = Consola.leerLong("Introduce el id del cliente a ver facturas");
+		obtenerPorIdFacturas();
+
 	}
 
 	private static void obtenerPorId(long id) {
@@ -238,13 +253,48 @@ public class EjemploJDBC {
 			int numeroRegistrosModificados = pst.executeUpdate();
 
 			if (numeroRegistrosModificados == 0) {
-				System.out.println("Error al eliminar el producto con id " + id);
+				System.out.println("Producto con id " + id + " no encontrado");
 			} else {
-				System.out.println("Producto " + id + " eliminado correctamente");
+				System.out.println("Producto con id " + id + " eliminado correctamente");
 			}
 
 		} catch (SQLException e) {
 			System.err.println("Error a la hora de borrar");
+			System.err.println(e.getMessage());
+//			e.printStackTrace();
+		}
+
+	}
+
+	private static void obtenerPorIdFacturas(long id) {
+		try {
+			boolean fichaClientesMostrada = false;
+
+			try (PreparedStatement pst = con.prepareStatement(SQL_SELECT_ID_FACTURAS)) {
+				pst.setLong(1, id);
+
+				try (ResultSet rs = pst.executeQuery()) {
+					while (rs.next()) {
+						if (fichaClientesMostrada = false) {
+							System.out.printf("""
+									Id:                  %s
+									DNI:                 %s%s
+									Nombre:              %s
+									Apellidos:           %s
+									Fecha de nacimiento: %s\n
+									""", rs.getString("c.id"), rs.getString("c.dni"), rs.getString("c.nombre"),
+									rs.getString("c.apellidos"), rs.getString("c.fecha_nacimiento"));
+
+							fichaClientesMostrada = true;
+						}
+
+						System.out.printf("%s, %s, %s", rs.getString("f.id"), rs.getString("f.numero"),
+								rs.getString("f.fecha"));
+					}
+				}
+			}
+		} catch (SQLException e) {
+			System.err.println("Error al obtener por el id " + id);
 			System.err.println(e.getMessage());
 //			e.printStackTrace();
 		}

@@ -15,6 +15,7 @@ public class Consola {
 		return sc.nextLine();
 	}
 
+	
 	public static Long leerLong(String mensaje) {
 		boolean hayError = true;
 		long l = 0;
@@ -23,7 +24,7 @@ public class Consola {
 			try {
 				String dato = leerString(mensaje);
 
-				if (dato.trim().length() == 0) {
+				if (dato == null) {
 					return null;
 				}
 
