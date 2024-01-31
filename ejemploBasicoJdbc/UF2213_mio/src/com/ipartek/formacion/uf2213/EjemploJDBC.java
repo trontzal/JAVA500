@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 import com.ipartek.bibliotecas.Consola;
+import com.mysql.cj.protocol.Message;
 
 public class EjemploJDBC {
 	private static final String URL = "jdbc:mysql://localhost:3306/manana_tienda";
@@ -30,19 +31,20 @@ public class EjemploJDBC {
 			    clientes_id = ?
 			""";
 	private static final String SQL_SELECT_ID_FACTURAS_CON_PRODUCTOS = """
-			    SELECT 
-    c.id, c.nombre, f.numero, p.nombre, fp.cantidad, p.precio ,(Select fp.cantidad*p.precio) as total_mismo_producto
-FROM
-    clientes AS c
-        JOIN
-    facturas AS f ON c.id = f.clientes_id
-        JOIN
-    facturas_has_productos AS fp ON f.id = fp.facturas_id
-        JOIN
-    productos AS p ON fp.productos_id = p.id
-where c.id=?
-ORDER BY f.numero
-			""";
+						    SELECT
+			    c.id, c.nombre, f.numero, p.nombre, fp.cantidad, p.precio ,(Select fp.cantidad*p.precio) as total_mismo_producto
+			FROM
+			    clientes AS c
+			        JOIN
+			    facturas AS f ON c.id = f.clientes_id
+			        JOIN
+			    facturas_has_productos AS fp ON f.id = fp.facturas_id
+			        JOIN
+			    productos AS p ON fp.productos_id = p.id
+			where c.id=?
+			ORDER BY f.numero
+						""";
+	private static final String SQL_SELECT_PRODUCTOS = "Select p.id, p.nombre, p.precio, p.stock from productos as p";
 	private static final String SQL_INSERT = "INSERT INTO clientes(dni, dni_diferencial, nombre, apellidos, fecha_nacimiento) VALUES (?,?,?,?,?)";
 	private static final String SQL_UPDATE = "UPDATE clientes SET dni=?, dni_diferencial=?, nombre=?, apellidos=?,fecha_nacimiento=? WHERE id =?";
 	private static final String SQL_DELETE = "DELETE FROM clientes  WHERE id=?";
@@ -53,9 +55,9 @@ ORDER BY f.numero
 	private static final int borrar = 5;
 	private static final int facturas = 6;
 	private static final int facturasConProductos = 7;
+	private static final int verProductos = 8;
 	private static final int salir = 0;
-	
-	 
+
 	private static Connection con;
 
 	public static void main(String[] args) {
@@ -74,7 +76,7 @@ ORDER BY f.numero
 		} catch (SQLException e) {
 			System.err.println("Error al conectar a la base de datos");
 			System.err.println(e.getMessage());
-//			e.printStackTrace();S
+//			e.printStackTrace();
 		}
 
 	}
@@ -90,6 +92,7 @@ ORDER BY f.numero
 				5. Eliminar
 				6. Facturas
 				7. Facturas con productos
+				8. Ver productos
 
 				0. SALIR
 				""");
@@ -132,6 +135,10 @@ ORDER BY f.numero
 			facturasConProductos();
 			break;
 		}
+		case verProductos: {
+			verProductos();
+			break;
+		}
 		case salir: {
 			System.out.println("Hasta la proxima");
 			break;
@@ -153,6 +160,26 @@ ORDER BY f.numero
 			System.err.println("Error en el listado");
 			System.err.println(e.getMessage());
 			// e.printStackTrace();
+		}
+	}
+
+	private static void verProductos() {
+		try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(SQL_SELECT_PRODUCTOS)) {
+			System.out.println("Productos---");
+			while (rs.next()) {
+				System.out.printf("""
+
+						id: 	%s
+						Nombre: %s
+						Precio: %s
+						Stock:  %s
+						""", rs.getLong("p.id"), rs.getString("p.nombre"), rs.getString("p.precio"),
+						rs.getLong("p.stock"));
+			}
+		} catch (SQLException e) {
+			System.err.println("Error al ver los productos");
+			System.err.println(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -210,11 +237,10 @@ ORDER BY f.numero
 
 	}
 
-
 	private static void facturasConProductos() {
 		long id = Consola.leerLong("Introduce el id para ver las facturas con los prodcutos");
 		obtenerPorIdConFacturasYProductos(id);
-		
+
 	}
 
 	private static void obtenerPorId(long id) {
@@ -326,7 +352,8 @@ ORDER BY f.numero
 								""",
 								// System.out.printf("%2s %s %3s %-3s %-20s %s\n",
 								rs.getString("c.id"), rs.getString("c.dni"), rs.getString("c.dni_diferencial"),
-								rs.getString("c.nombre"), rs.getString("c.apellidos"), rs.getString("c.fecha_nacimiento"));
+								rs.getString("c.nombre"), rs.getString("c.apellidos"),
+								rs.getString("c.fecha_nacimiento"));
 						fichaClienteMostrada = true;
 					}
 
@@ -347,50 +374,91 @@ ORDER BY f.numero
 		Long idFactura = null;
 		BigDecimal totalMismoProducto = BigDecimal.ZERO;
 		BigDecimal totalMismaFactura = BigDecimal.ZERO;
+		BigDecimal totalTodasFacturas = BigDecimal.ZERO;
+
 		try {
 			PreparedStatement pst = con.prepareStatement(SQL_SELECT_ID_FACTURAS_CON_PRODUCTOS);
 			pst.setLong(1, id);
 			ResultSet rs = pst.executeQuery();
-			while (rs.next()){
+			while (rs.next()) {
 				idFactura = rs.getLong("f.numero");
 				if (personaMostrada == false) {
-//					Muestro el cliente
-					System.out.printf("""
-						id: %s
-						nombre: %s
-						Facturas----						
-						""",
-						rs.getString("c.id"), rs.getString("c.nombre"));
+
+					mostrarClienteConIdYNombre(rs);
+
 					personaMostrada = true;
 				}
-				if(!Objects.equals(idFactura, idFacturaEnCurso)) {
-					System.out.printf("""		
-										
-						-- Factura Numero: %s
-						
-						""",
-						rs.getString("f.numero"));
+				if (!Objects.equals(idFactura, idFacturaEnCurso)) {
+					if (totalMismaFactura != BigDecimal.ZERO) {
+
+						motrarTotalUnaFactura(totalMismaFactura);
+					}
+					
+					mostrarNumeroFactura(rs);
+					
 					idFacturaEnCurso = idFactura;
 					totalMismaFactura = BigDecimal.ZERO;
-					
+
 				}
-				System.out.printf("""
-						Nombre: %s
-						Cantidad: %s
-						Precio: %s
-						Total mismo producto: %s
-						""",
-						rs.getString("p.nombre"),rs.getString("fp.cantidad"),rs.getString("p.precio"),rs.getString("total_mismo_producto"));
-				totalMismoProducto = rs.getBigDecimal("total_mismo_producto");
-				totalMismaFactura = totalMismaFactura.add(totalMismoProducto);
 				
-				System.out.println("Total de una factura " + totalMismaFactura);
+				totalMismoProducto = motrarProductoConCantidadYTotalDelMismo(rs);
+				totalMismaFactura = totalMismaFactura.add(totalMismoProducto);
+				totalTodasFacturas = totalTodasFacturas.add(totalMismoProducto);
+
+			}
+			if (idFacturaEnCurso != null) {
+				
+				mostrarTotalUltimaFacturaYTotalTodasLasFacturas(totalMismaFactura, totalTodasFacturas);
+				
+			} else {
+				System.out.println("Usuario sin facturas o inexistente");
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Error en las facturas del usuario " + id);
+			System.out.println(e.getMessage());
+//			e.printStackTrace();
 		}
-		
+
+	}
+
+	private static void motrarTotalUnaFactura(BigDecimal totalMismaFactura) {
+		System.out.println("Total de una factura (arreglar chapuza) " + totalMismaFactura);
+	}
+
+	private static void mostrarTotalUltimaFacturaYTotalTodasLasFacturas(BigDecimal totalMismaFactura,
+			BigDecimal totalTodasFacturas) {
+		System.out.println("Total de una factura (solo funciona en la ultima) " + totalMismaFactura);
+		System.out.println();
+		System.out.println("Total gatado por el usuario " + totalTodasFacturas);
+		System.out.println();
+	}
+
+	private static BigDecimal motrarProductoConCantidadYTotalDelMismo(ResultSet rs) throws SQLException {
+		BigDecimal totalMismoProducto;
+		System.out.printf("""
+				Nombre: %s
+				Cantidad: %s
+				Precio: %s
+				Total mismo producto: %s
+				""", rs.getString("p.nombre"), rs.getString("fp.cantidad"), rs.getString("p.precio"),
+				rs.getString("total_mismo_producto"));
+		totalMismoProducto = rs.getBigDecimal("total_mismo_producto");
+		return totalMismoProducto;
+	}
+
+	private static void mostrarNumeroFactura(ResultSet rs) throws SQLException {
+		System.out.printf("""
+
+				-- Factura Numero: %s
+
+				""", rs.getString("f.numero"));
+	}
+
+	private static void mostrarClienteConIdYNombre(ResultSet rs) throws SQLException {
+		System.out.printf("""
+				id: %s
+				nombre: %s
+				Facturas----
+				""", rs.getString("c.id"), rs.getString("c.nombre"));
 	}
 }
-
