@@ -15,16 +15,19 @@ public class PracticaSQL {
 
 	private static Connection con;
 	private static final Scanner sc = new Scanner(System.in);
-	
-	//Opciones generales
+
+	// Opciones generales
 	private static final int out = 0;
 	private static final int clientOptions = 1;
 	private static final int productOptions = 2;
-	
-	//Opciones clientes
+
+	// Opciones clientes
 	private static final int clientsList = 1;
 	
-	//SQL
+	// Opciones productos 
+	// ...
+
+	// SQL
 	private static final String SQL_SELECT_CLIENTS = "SELECT c.id, c.dni, c.dni_diferencial, c.nombre, c.apellidos, c.fecha_nacimiento FROM clientes AS c";
 
 	public static void main(String[] args) {
@@ -50,7 +53,7 @@ public class PracticaSQL {
 
 	private static void showMenu() {
 		System.out.printf("""
-				
+
 				MENU General------
 
 				1. Menu Clientes
@@ -107,7 +110,7 @@ public class PracticaSQL {
 
 	private static void clientsMenu() {
 		System.out.printf("""
-				
+
 				Menu clientes ---
 
 				1. Ver clientes
@@ -137,16 +140,13 @@ public class PracticaSQL {
 	}
 
 	private static void clientsList() {
-		try (Statement st = con.createStatement();
-				ResultSet rs = st.executeQuery(SQL_SELECT_CLIENTS)) {
+		try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(SQL_SELECT_CLIENTS)) {
 			System.out.println("ID   |    DNI     |DIFCL|   NOMBRE      |  APELLIDOS   |   FECHA NACIMIENTO  ");
-			while(rs.next()) {
-				System.out.printf(
-						"""
+			while (rs.next()) {
+				System.out.printf("""
 						%-4s %11s   %-8s %-15s %-15s %s
-						""",
-						rs.getInt("c.id"), rs.getString("c.dni"), rs.getLong("c.dni_diferencial"), rs.getString("c.nombre"), rs.getString("c.apellidos"), rs.getDate("c.fecha_nacimiento")
-						);
+						""", rs.getInt("c.id"), rs.getString("c.dni"), rs.getLong("c.dni_diferencial"),
+						rs.getString("c.nombre"), rs.getString("c.apellidos"), rs.getDate("c.fecha_nacimiento"));
 			}
 		} catch (SQLException e) {
 			System.err.println("Error al conseguir el listado");
