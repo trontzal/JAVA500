@@ -1,11 +1,14 @@
 package com.ipartek.formacion.uf2213;
 
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Scanner;
+
+import com.ipartek.formacion.uf2213.bibliotecas.Read;
+import com.mysql.cj.jdbc.CallableStatement;
 
 public class PracticaSQL {
 
@@ -14,7 +17,6 @@ public class PracticaSQL {
 	private static final String PASS = "1234";
 
 	private static Connection con;
-	private static final Scanner sc = new Scanner(System.in);
 
 	// Opciones generales
 	private static final int out = 0;
@@ -23,12 +25,14 @@ public class PracticaSQL {
 
 	// Opciones clientes
 	private static final int clientsList = 1;
+	private static final int clientWithId = 2;
 	
 	// Opciones productos 
 	// ...
 
 	// SQL
-	private static final String SQL_SELECT_CLIENTS = "SELECT c.id, c.dni, c.dni_diferencial, c.nombre, c.apellidos, c.fecha_nacimiento FROM clientes AS c";
+	private static final String SQL_SELECT_CLIENTS = "CALL select_clientes";
+	private static final String SQL_SELECT_CLIENT_ID = "CALL select_cliente_id(?)";
 
 	public static void main(String[] args) {
 		try {
@@ -38,20 +42,20 @@ public class PracticaSQL {
 
 			do {
 
-				showMenu();
+				showMenuGeneral();
 				option = askOption();
-				executeFirstOption(option);
+				executeGeneralMenuOption(option);
 
 			} while (option != 0);
 
 		} catch (SQLException e) {
 			System.err.println("Error al conectarse a la base de datos");
 			System.out.println(e.getMessage());
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 
-	private static void showMenu() {
+	private static void showMenuGeneral() {
 		System.out.printf("""
 
 				MENU General------
@@ -66,12 +70,25 @@ public class PracticaSQL {
 
 	}
 
-	private static int askOption() {
-		System.out.println("Elige una opcion: ");
-		return sc.nextInt();
+	private static void showMenuClients() {
+		System.out.printf("""
+	
+				Menu clientes ---
+	
+				1. Ver clientes
+				2. Ver cliente con id
+	
+				0. Volver atras
+	
+				""");
+	
 	}
 
-	private static void executeFirstOption(int option) {
+	private static int askOption() {
+		return Read.readInt("Elige una opcion: ");
+	}
+
+	private static void executeGeneralMenuOption(int option) {
 		System.out.println("Ejecutando opcion " + option);
 
 		switch (option) {
@@ -94,35 +111,8 @@ public class PracticaSQL {
 		}
 	}
 
-	private static void clientsOptions() {
-		int option;
-		do {
-			clientsMenu();
-			option = askOption();
-			executeClientsOption(option);
-		} while (option != 0);
-	}
-
-	private static void productOptions() {
-		System.out.println("Opciones de productos");
-
-	}
-
-	private static void clientsMenu() {
-		System.out.printf("""
-
-				Menu clientes ---
-
-				1. Ver clientes
-
-				0. Volver atras
-
-				""");
-
-	}
-
 	private static void executeClientsOption(int option) {
-
+	
 		switch (option) {
 		case out: { // 0
 			System.out.println("Volviendo a el menu general");
@@ -132,11 +122,29 @@ public class PracticaSQL {
 			clientsList();
 			break;
 		}
+		case clientWithId: { // 2
+			clientWithId();
+			break;
+		}
 		default: {
 			System.out.println("Tiene que ser una opcion valida");
 			break;
 		}
 		}
+	}
+
+	private static void clientsOptions() {
+		int option;
+		do {
+			showMenuClients();
+			option = askOption();
+			executeClientsOption(option);
+		} while (option != 0);
+	}
+
+	private static void productOptions() {
+		System.out.println("Opciones de productos");
+
 	}
 
 	private static void clientsList() {
@@ -150,6 +158,27 @@ public class PracticaSQL {
 			}
 		} catch (SQLException e) {
 			System.err.println("Error al conseguir el listado");
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	private static void clientWithId() {
+		Long id = Read.readLong("Introduce el id a buscar");
+		getClientWithId(id);
+	}
+
+	private static void getClientWithId(Long id) {
+		try (java.sql.CallableStatement cst = con.prepareCall(SQL_SELECT_CLIENT_ID)) {
+			cst.setLong(1,  id);
+			ResultSet rs = cst.executeQuery();	
+			if(rs.next()) {
+				System.out.println(rs);
+			}else {
+				System.out.println("No se ha podido encontrar ningun cliente con el id " + id);
+			}
+		} catch (SQLException e) {
+			System.err.println("Error al conseguir cliente con id " + id);
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
